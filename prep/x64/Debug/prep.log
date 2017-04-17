@@ -1,0 +1,4 @@
+﻿  ver1.cpp
+d:\code\research\diff_stereo\prep\ver1.cpp(145): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+d:\code\research\diff_stereo\prep\ver1.cpp(158): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  prep.vcxproj -> D:\Code\Research\diff_stereo\x64\Debug\prep.exe

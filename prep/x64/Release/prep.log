@@ -1,0 +1,55 @@
+﻿  main.cpp
+d:\codes\diff\code\diff_stereo\prep\optimizer.h(28): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
+d:\codes\diff\code\diff_stereo\prep\optimizer.h(48): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+d:\codes\diff\code\diff_stereo\prep\optimizer.h(58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(26): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(58): warning C4305: '=': truncation from 'double' to 'float'
+main.cpp(104): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+main.cpp(222): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+main.cpp(429): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+main.cpp(635): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+main.cpp(639): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+main.cpp(715): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
+main.cpp(877): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(923): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+main.cpp(865): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+main.cpp(872): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+main.cpp(987): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(987): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+main.cpp(970): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+main.cpp(1002): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+main.cpp(1227): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+main.cpp(1227): warning C4305: 'initializing': truncation from 'double' to 'float'
+main.cpp(1228): warning C4838: conversion from 'double' to 'int' requires a narrowing conversion
+main.cpp(1228): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+main.cpp(1231): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+main.cpp(1254): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+  render.cpp
+render.cpp(93): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+render.cpp(94): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+render.cpp(349): warning C4244: 'argument': conversion from 'double' to 'const float', possible loss of data
+MSVCRT.lib(initializers.obj) : warning LNK4098: defaultlib 'msvcrtd.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Generating code
+  161 of 817 functions (19.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    45 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+advmath.lib(basic_mv.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(basic_mv.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
+advmath.lib(basic_v.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(basic_v.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
+advmath.lib(basic_m.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(basic_m.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
+advmath.lib(lsq.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(lsq.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
+advmath.lib(opt_levmar.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(opt_levmar.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
+advmath.lib(svd.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(svd.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
+codex_utils.lib(codex_utils_profile.obj) : warning LNK4099: PDB 'CodeX_Utils.pdb' was not found with 'codex_utils.lib(codex_utils_profile.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\CodeX_Utils.pdb'; linking object as if no debug info
+codex_utils.lib(codex_utils_file.obj) : warning LNK4099: PDB 'CodeX_Utils.pdb' was not found with 'codex_utils.lib(codex_utils_file.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\CodeX_Utils.pdb'; linking object as if no debug info
+codex_basic.lib(codex_basic_exception.obj) : warning LNK4099: PDB 'CodeX_Basic.pdb' was not found with 'codex_basic.lib(codex_basic_exception.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\CodeX_Basic.pdb'; linking object as if no debug info
+codex_graphics.lib(codex_graphics_base_tri_mesh.obj) : warning LNK4099: PDB 'CodeX_Graphics.pdb' was not found with 'codex_graphics.lib(codex_graphics_base_tri_mesh.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\CodeX_Graphics.pdb'; linking object as if no debug info
+codex_graphics.lib(codex_graphics_utils.obj) : warning LNK4099: PDB 'CodeX_Graphics.pdb' was not found with 'codex_graphics.lib(codex_graphics_utils.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\CodeX_Graphics.pdb'; linking object as if no debug info
+codex_graphics.lib(codex_graphics_ray.obj) : warning LNK4099: PDB 'CodeX_Graphics.pdb' was not found with 'codex_graphics.lib(codex_graphics_ray.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\CodeX_Graphics.pdb'; linking object as if no debug info
+  prep.vcxproj -> D:\codes\diff\code\diff_stereo\x64\Release\prep.exe
+  prep.vcxproj -> D:\codes\diff\code\diff_stereo\x64\Release\prep.pdb (Full PDB)
