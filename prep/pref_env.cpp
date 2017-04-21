@@ -104,26 +104,26 @@ void pref_env::lookup_cos(vector3f & result, const vector3f & mu) const
 	fr.lerp(num, idx, weight, mu);
 
 	/*The following is using Gaussian filter*/
-	int w = 6;
-	float alpha_fall = 0.01f;
-	int *neighbors = new int[w*w];
-	fr.filter_prep_index(neighbors, idx[0], w / 2);
-	float p_row = 1.0f - (weight[0] + weight[2]);
-	float p_col = 1.0f - (weight[0] + weight[1]);
-	float *vals = new float[w * w];
-	for (int ch = 0; ch < 3; ch++) {
-		for (int i = 0; i < w*w; i++) {
-			vals[i] = env[num_level * 3 * dim*dim + neighbors[i] * 3 + ch];
-		}
-		c.v[ch] = gauss_filter(vals, alpha_fall, w, p_row, p_col);
-	}
-	delete[]vals;
-	delete[]neighbors;
+	//int w = 6;
+	//float alpha_fall = 0.01f;
+	//int *neighbors = new int[w*w];
+	//fr.filter_prep_index(neighbors, idx[0], w / 2);
+	//float p_row = 1.0f - (weight[0] + weight[2]);
+	//float p_col = 1.0f - (weight[0] + weight[1]);
+	//float *vals = new float[w * w];
+	//for (int ch = 0; ch < 3; ch++) {
+	//	for (int i = 0; i < w*w; i++) {
+	//		vals[i] = env[num_level * 3 * dim*dim + neighbors[i] * 3 + ch];
+	//	}
+	//	c.v[ch] = gauss_filter(vals, alpha_fall, w, p_row, p_col);
+	//}
+	//delete[]vals;
+	//delete[]neighbors;
 	/**************************************/
 
-	//for (int i = 0; i < num; i++)
-	//	for (int ch = 0; ch < 3; ch++)
-	//		c.v[ch] += weight[i] * env[num_level * 3 * dim*dim + idx[i] * 3 + ch];
+	for (int i = 0; i < num; i++)
+		for (int ch = 0; ch < 3; ch++)
+			c.v[ch] += weight[i] * env[num_level * 3 * dim*dim + idx[i] * 3 + ch];
 	result = c;
 }
 

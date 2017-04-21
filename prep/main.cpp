@@ -698,10 +698,15 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 									 //uv.x = 0.00195312f;
 									 //uv.y = -0.00195312f;
 									 //DEBUG
+	std::vector<float> k1;
+	std::vector<std::vector<float> > coeff_A;
+	std::vector<std::vector<float> > coeff_b;
+	float *recon_err = new float[NUM_IMG_PAIRS * scr.size()];
+
 	printf_s("start preprocessing...\n");
-	std::vector<float> pixel0;
 	int width, height;
 
+	std::vector<float> pixel0;
 	//std::vector<vector2f> scr;
 	{
 		char filename[MAX_PATH];
@@ -728,11 +733,11 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		}
 	}
 
+	FILE *prepfile;
+	char filename[MAX_PATH];
+	sprintf_s(filename, "d:/codes/diff/data/data_lambertian_prep.dat");
 
-	std::vector<float> k1;
-	std::vector<std::vector<float> > coeff_A;
-	std::vector<std::vector<float> > coeff_b;
-
+#if COMPUTE_PREP == 1
 	for (int i = 1; i <= NUM_IMG_PAIRS; i++)
 	{
 		char filename[MAX_PATH];
@@ -797,8 +802,8 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 			//compute Ia, Ib, Ic
 			vector3f gI;
 
-			la_matrix<float> A(nsamples, 3);
-			la_vector<float> b(nsamples);
+			std::vector<vector3f> A_temp;
+			std::vector<float> b_temp;
 			float max_du = 0;
 			for (int j = 0; j < nsamples; j++)
 			{
@@ -807,22 +812,42 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 				duv.x = k2 / (k1[i - 1] - beta*z);
 				duv.y = k3 / (k1[i - 1] - beta*z);
 
-				max_du = fabs(duv.x) > max_du ? fabs(duv.x) : max_du;
-
-				A.m[0 * A.row + j] = duv.x;
-				A.m[1 * A.row + j] = duv.y;
-				A.m[2 * A.row + j] = 1.0f;
-
 				vector2f uv2 = uv[i_point] + duv;
 				vector3f v;
 				warp_a_pixel(v, uv2, img, width, height, f, R);
-				b.v[j] = (v.x + v.y + v.z) / 3;
+				//max_du = fabs(duv.x) > max_du ? fabs(duv.x) : max_du;
+
+				// check if the point is mapped to empty space
+				if ((v - vector3f(1, 0, 1)).length() > 1e-5) {
+					A_temp.push_back(vector3f(duv.x, duv.y, 1.0f));
+					b_temp.push_back((v.x + v.y + v.z) / 3);
+
+					// check individual point
+/*					{
+						if (i_point == 55235) {
+							printf("sample %03d:duv=( %.6f %.6f ), pix = %.6f\n",
+								j, duv.x, duv.y, (v.x+v.y+v.z)/3);
+						}
+					}	*/	
+				}
 				//printf_s("%g %g\n", z, b.v[j]);
 			}
 			//printf_s("max du:%g\n", max_du);
 
+			int valid_samples = A_temp.size();
+			la_matrix<float> A(valid_samples, 3);
+			la_vector<float> b(valid_samples);
+			for (int j = 0; j < valid_samples; j++) {
+				A.m[0 * A.row + j] = A_temp[j].x;
+				A.m[1 * A.row + j] = A_temp[j].y;
+				A.m[2 * A.row + j] = A_temp[j].z;
+				b.v[j] = b_temp[j];
+			}
+
 			la_vector<float> x;
-			slsq(x, A, b, 1);
+			la_matrix<float> A_copy;
+			A_copy = A;
+			slsq(x, A_copy, b, 1.0f);
 			gI.x = x.v[0];
 			gI.y = x.v[1];
 			gI.z = x.v[2];
@@ -830,37 +855,89 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 			coeff_img_b.push_back(gI.z - pixel0[i_point]);
 
 			// this segment lets you check the reconstruction error of fitting (Ia,Ib,Ic)
-			//if (!groundtruth.empty())
-			//{
-			//	float z = groundtruth[i_point];
-			//	vector3f duv;
-			//	duv.x = k2 / (k1[i - 1] - beta*z);
-			//	duv.y = k3 / (k1[i - 1] - beta*z);
-			//	duv.z = 1;
-			//	float recon = duv*gI;
-			//	float err = fabs(recon - pixel0[i_point]) / pixel0[i_point] * 100;
-			//	printf_s("point %d intensity: %.6f\t recon: %.6f\t err: %.2f%%\n", i_point, pixel0[i_point], recon, err);
-			//}
-
-			//compute
-			//printf_s("Ia Ib Ic = [%g %g %g]\n", gI.x, gI.y, gI.z);		
+			//if (i_point == 55235 || i_point == 55695)
+			{
+				float z = groundtruth[i_point];
+				vector3f duv;
+				duv.x = k2 / (k1[i - 1] - beta*z);
+				duv.y = k3 / (k1[i - 1] - beta*z);
+				duv.z = 1;
+				float recon = duv*gI;
+				float err = fabs(recon - pixel0[i_point]) / pixel0[i_point] * 100;
+				recon_err[(i - 1)*scr.size() + i_point] = err;
+				//if (err > 10.0f) {
+				//	printf_s("gd=%g,duv=(%g, %g)\n", z, duv.x, duv.y);
+				//	printf_s("img %d point %d, %d samples: %.6f\t recon: %.6f\t err: %.2f%%\n", i, i_point, valid_samples, pixel0[i_point], recon, err);
+				//	la_vector<float> res, diff;
+				//	smvmul(res, A, x);
+				//	svsub(diff, res, b);
+				//	printf_s("Ia Ib Ic = [%g %g %g], err norm = %g\n", gI.x, gI.y, gI.z, svnorm2(diff));
+				//}
+			}					
 		}
 		coeff_A.push_back(coeff_img_A);
 		coeff_b.push_back(coeff_img_b);
 		printf("preprocessing done for image pair %d of %d\n", i, NUM_IMG_PAIRS);
 	}
 
-	printf_s("preprocessing complete, solving for depth...\n");
 
-	diffuse_func opt_func;
-	opt_func.beta = 1.0f / FOCAL_LEN;
-	opt_func.view_num = NUM_IMG_PAIRS;
+	prepfile = fopen(filename, "wb");
+	int nk = k1.size();
+	int nA = coeff_A.size();
+	int nsubA = coeff_A[0].size();
+	fwrite(&nk, sizeof(int), 1, prepfile);
+	fwrite(&nA, sizeof(int), 1, prepfile);
+	fwrite(&nsubA, sizeof(int), 1, prepfile);
+	for (int ik = 0; ik < k1.size(); ik++) {
+		fwrite(&k1[ik], sizeof(float), 1, prepfile);
+	}
+	for (int iA = 0; iA < coeff_A.size(); iA++) {
+		for (int jA = 0; jA < coeff_A[iA].size(); jA++) {
+			fwrite(&coeff_A[iA][jA], sizeof(float), 1, prepfile);
+		}
+	}
+	for (int ib = 0; ib < coeff_b.size(); ib++) {
+		for (int jb = 0; jb < coeff_b[ib].size(); jb++) {
+			fwrite(&coeff_b[ib][jb], sizeof(float), 1, prepfile);
+		}
+	}
+	fwrite(recon_err, sizeof(float), NUM_IMG_PAIRS * scr.size(), prepfile);
+	delete[] recon_err;
+	fclose(prepfile);
+	printf_s("preprocessing complete, written to file\n");
+	exit(1);
+#else
+	prepfile = fopen(filename, "rb");
+	int ns[3];
+	fread(ns, sizeof(int), 3, prepfile);
 
-	la_matrix<float> A_all_pairs(NUM_IMG_PAIRS, 1);
-	la_vector<float> b_all_pairs(NUM_IMG_PAIRS);
+	float *k_buffer = new float[ns[0]];
+	fread(k_buffer, sizeof(float), ns[0], prepfile);
+	for (int ik = 0; ik < ns[0]; ik++) {
+		k1.push_back(k_buffer[ik]);
+	}
+	delete[] k_buffer;
+
+	float *img_buffer = new float[ns[2]];
+	for (int i = 0; i < ns[1]; i++) {
+		fread(img_buffer, sizeof(float), ns[2], prepfile);
+		std::vector<float> vec_buffer(img_buffer, img_buffer+ns[2]);
+		coeff_A.push_back(vec_buffer);
+	}
+	for (int i = 0; i < ns[1]; i++) {
+		fread(img_buffer, sizeof(float), ns[2], prepfile);
+		std::vector<float> vec_buffer(img_buffer, img_buffer + ns[2]);
+		coeff_b.push_back(vec_buffer);
+	}
+	delete[] img_buffer;
+	fread(recon_err, sizeof(float), NUM_IMG_PAIRS * scr.size(), prepfile);
+
+	fclose(prepfile);
+	printf_s("parameters read from pre-computed file, solving for depth...\n");
+
+#endif
 
 	FILE *file_obj;
-	char filename[MAX_PATH];
 	sprintf_s(filename, "d:/codes/diff/data/lambertian_out.obj");
 	if ((file_obj = fopen(filename, "w")) == NULL)
 	{
@@ -881,55 +958,77 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 
 	for (int i_point = 0; i_point < uv.size(); i_point++)
 	{
-		A_all_pairs.clear();
-		b_all_pairs.clear();
+		diffuse_func opt_func;
+		opt_func.beta = 1.0f / FOCAL_LEN;		
 		opt_func.coef.clear();
 		opt_func.k1.clear();
-		opt_func_LM<float> opt(1, NUM_IMG_PAIRS);
-		la_vector<float> vref(NUM_IMG_PAIRS);
-
+		std::vector<float> vref_buffer, A_buffer, b_buffer;
 		for (int i_img = 0; i_img < NUM_IMG_PAIRS; i_img++)
 		{
+			if (recon_err[i_img*scr.size() + i_point] > 1.0f) continue;
 			opt_func.coef.push_back(coeff_A[i_img][i_point]);
 			opt_func.k1.push_back(k1[i_img]);
-			vref.v[i_img] = coeff_b[i_img][i_point];
-			A_all_pairs.m[i_img] = coeff_A[i_img][i_point];
-			b_all_pairs.v[i_img] = coeff_b[i_img][i_point];
+			vref_buffer.push_back(coeff_b[i_img][i_point]);
+			A_buffer.push_back(coeff_A[i_img][i_point]);
+			b_buffer.push_back(coeff_b[i_img][i_point]);
 		}
-		//for (int k = 0; k < NUM_IMG_PAIRS; k++)
-		//{
-		//	printf("\t%g \t%g\n", A_all_pairs.m[k], b_all_pairs.v[k]);
-		//}
-		la_vector<float> z_temp(1);
-		z_temp.clear();
-		z_temp.v[0] = (z0 + z1) / 2;
-		opt.set_f(&opt_func);
-		float obj;
-		opt_levmar(z_temp, &obj, &opt, vref, 1000);
-		float z_est_lm = z_temp.v[0];
+		int n_valid_img = vref_buffer.size();
+		float z_est_lm = 0;
+		if (n_valid_img == 0) {
+			printf_s("point %d has no valid measuerments!\n", i_point);
+			z_est_lm = -SHIFT_Z;
+		}
+		else {
+			opt_func_LM<float> opt(1, n_valid_img);
+			opt_func.view_num = n_valid_img;
+			la_vector<float> vref(n_valid_img);
+			la_matrix<float> A_all_pairs(n_valid_img, 1);
+			la_vector<float> b_all_pairs(n_valid_img);
+			for (int i = 0; i < n_valid_img; i++) {
+				A_all_pairs.m[i] = A_buffer[i];
+				b_all_pairs.v[i] = b_buffer[i];
+				vref.v[i] = vref_buffer[i];
+			}
 
-		float err = 0;
-		if (!groundtruth.empty())
-		{
-			float cur_z = groundtruth[i_point];
-			for (int j = 0; j < NUM_IMG_PAIRS; j++)
+			la_vector<float> z_temp(1);
+			z_temp.clear();
+			z_temp.v[0] = (z0 + z1) / 2;
+			opt.set_f(&opt_func);
+			float obj;
+			opt_levmar(z_temp, &obj, &opt, vref, 1000);
+			z_est_lm = z_temp.v[0];
+
+			float err = 0;
 			{
-				float residual = A_all_pairs.m[j] / (k1[j] - cur_z / FOCAL_LEN) - b_all_pairs.v[j];
-				err += residual * residual;
+				float cur_z = groundtruth[i_point];
+				for (int j = 0; j < n_valid_img; j++)
+				{
+					float residual = A_all_pairs.m[j] / (opt_func.k1[j] - cur_z / FOCAL_LEN) - b_all_pairs.v[j];
+					err += residual * residual;
+				}
+			}
+
+			//slsq(z_temp, A_all_pairs, b_all_pairs, 1);	// note that slsq will modify A matrix!
+			//float z_est_lsq = (1.0 - 1.0 / z_temp.v[0]) * FOCAL_LEN;
+
+			if (z_est_lm < -30)
+			{
+				printf_s("point %d is bad\n", i_point);
+				printf_s("scan=(%d,%d)\tz=%g\tobj=%.6f\tgdz=%g\tgdobj=%.6f\n", scr[i_point].first, scr[i_point].second, z_est_lm, obj, groundtruth[i_point], err);
+				printf_s("recon error:\n");
+				for (int i = 0; i < NUM_IMG_PAIRS; i++) {
+					printf_s("%.3f%%\t ", recon_err[i*scr.size() + i_point]);
+				}
+				printf_s("\n");
 			}
 		}
 
-		slsq(z_temp, A_all_pairs, b_all_pairs, 1);	// note that slsq will modify A matrix!
-		float z_est_lsq = (1.0 - 1.0 / z_temp.v[0]) * FOCAL_LEN;
-
-		if (z_est_lm < -100)
-			printf("scan=(%d,%d)\tz=%g\tobj=%.6f\tgdz=%g\tgdobj=%.6f\n", scr[i_point].first, scr[i_point].second, z_est_lm, obj, groundtruth[i_point], err);
 
 		{	// output the obj file
 			float x = uv[i_point].x * (1 - z_est_lm / FOCAL_LEN);
 			float y = uv[i_point].y * (1 - z_est_lm / FOCAL_LEN);
 			float z = z_est_lm + SHIFT_Z;
-			if (fabs(x) < 1.0f && fabs(y) < 1.0f && fabs(z) <1.0f)
+			if (fabs(x) < 2.2f && fabs(y) < 2.2f && fabs(z) <2.2f)
 				fprintf(file_obj, "v %g %g %g\n", x, y, z); 
 		}
 		{
