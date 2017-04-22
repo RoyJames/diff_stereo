@@ -857,22 +857,24 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 			// this segment lets you check the reconstruction error of fitting (Ia,Ib,Ic)
 			//if (i_point == 55235 || i_point == 55695)
 			{
-				float z = groundtruth[i_point];
-				vector3f duv;
-				duv.x = k2 / (k1[i - 1] - beta*z);
-				duv.y = k3 / (k1[i - 1] - beta*z);
-				duv.z = 1;
-				float recon = duv*gI;
-				float err = fabs(recon - pixel0[i_point]) / pixel0[i_point] * 100;
-				recon_err[(i - 1)*scr.size() + i_point] = err;
-				//if (err > 10.0f) {
-				//	printf_s("gd=%g,duv=(%g, %g)\n", z, duv.x, duv.y);
-				//	printf_s("img %d point %d, %d samples: %.6f\t recon: %.6f\t err: %.2f%%\n", i, i_point, valid_samples, pixel0[i_point], recon, err);
-				//	la_vector<float> res, diff;
-				//	smvmul(res, A, x);
-				//	svsub(diff, res, b);
-				//	printf_s("Ia Ib Ic = [%g %g %g], err norm = %g\n", gI.x, gI.y, gI.z, svnorm2(diff));
-				//}
+				//float z = groundtruth[i_point];
+				//vector3f duv;
+				//duv.x = k2 / (k1[i - 1] - beta*z);
+				//duv.y = k3 / (k1[i - 1] - beta*z);
+				//duv.z = 1;
+				//float recon = duv*gI;
+				//float err = fabs(recon - pixel0[i_point]) / pixel0[i_point] * 100;
+				//recon_err[(i - 1)*scr.size() + i_point] = err;
+				//if (err > 10.0f) 
+				{
+					//printf_s("gd=%g,duv=(%g, %g)\n", z, duv.x, duv.y);
+					//printf_s("img %d point %d, %d samples: %.6f\t recon: %.6f\t err: %.2f%%\n", i, i_point, valid_samples, pixel0[i_point], recon, err);
+					la_vector<float> res, diff;
+					smvmul(res, A, x);
+					svsub(diff, res, b);
+					//printf_s("Ia Ib Ic = [%g %g %g], err norm = %g\n", gI.x, gI.y, gI.z, svnorm2(diff));
+					recon_err[(i - 1)*scr.size() + i_point] = svnorm2(diff);
+				}
 			}					
 		}
 		coeff_A.push_back(coeff_img_A);
@@ -965,7 +967,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		std::vector<float> vref_buffer, A_buffer, b_buffer;
 		for (int i_img = 0; i_img < NUM_IMG_PAIRS; i_img++)
 		{
-			if (recon_err[i_img*scr.size() + i_point] > 1.0f) continue;
+			if (recon_err[i_img*scr.size() + i_point] > 1e-1) continue;
 			opt_func.coef.push_back(coeff_A[i_img][i_point]);
 			opt_func.k1.push_back(k1[i_img]);
 			vref_buffer.push_back(coeff_b[i_img][i_point]);
@@ -1017,7 +1019,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 				printf_s("scan=(%d,%d)\tz=%g\tobj=%.6f\tgdz=%g\tgdobj=%.6f\n", scr[i_point].first, scr[i_point].second, z_est_lm, obj, groundtruth[i_point], err);
 				printf_s("recon error:\n");
 				for (int i = 0; i < NUM_IMG_PAIRS; i++) {
-					printf_s("%.3f%%\t ", recon_err[i*scr.size() + i_point]);
+					printf_s("%.3f\t ", recon_err[i*scr.size() + i_point]);
 				}
 				printf_s("\n");
 			}
@@ -1341,8 +1343,8 @@ void main()
 
 	//test_view_diff3();
 	//test_filtered_1st_order();
-	//synthesize_images();
-	//return;
+	synthesize_images();
+	return;
 
 
 	std::vector<std::pair<int,int> > points_under_test;

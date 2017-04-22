@@ -10,32 +10,65 @@ main.cpp(429): warning C4267: 'argument': conversion from 'size_t' to 'const int
 main.cpp(635): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 main.cpp(639): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
 main.cpp(720): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
-main.cpp(954): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-main.cpp(975): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-main.cpp(910): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+main.cpp(956): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(977): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(912): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
-main.cpp(942): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+main.cpp(944): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
-main.cpp(949): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+main.cpp(951): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
-main.cpp(1086): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-main.cpp(1086): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
-main.cpp(1069): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+main.cpp(1088): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+main.cpp(1088): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+main.cpp(1071): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
-main.cpp(1101): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+main.cpp(1103): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
-main.cpp(1326): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-main.cpp(1326): warning C4305: 'initializing': truncation from 'double' to 'float'
-main.cpp(1327): warning C4838: conversion from 'double' to 'int' requires a narrowing conversion
-main.cpp(1327): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-main.cpp(1330): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-main.cpp(1353): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+main.cpp(1328): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+main.cpp(1328): warning C4305: 'initializing': truncation from 'double' to 'float'
+main.cpp(1329): warning C4838: conversion from 'double' to 'int' requires a narrowing conversion
+main.cpp(1329): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+main.cpp(1332): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+main.cpp(1355): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+  synthesize_images.cpp
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(66): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+  d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(81): note: see reference to function template instantiation 'void codex::math::matrix::rotation_x<matrix,Number>(matrix &,const Number,const Number)' being compiled
+          with
+          [
+              matrix=codex::math::matrix4x4f,
+              Number=double
+          ]
+  synthesize_images.cpp(40): note: see reference to function template instantiation 'void codex::math::matrix::rotation_x<codex::math::matrix4x4f,double>(matrix &,const Number)' being compiled
+          with
+          [
+              matrix=codex::math::matrix4x4f,
+              Number=double
+          ]
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(67): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(68): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(69): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(91): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+  d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(106): note: see reference to function template instantiation 'void codex::math::matrix::rotation_y<matrix,Number>(matrix &,const Number,const Number)' being compiled
+          with
+          [
+              matrix=codex::math::matrix4x4f,
+              Number=double
+          ]
+  synthesize_images.cpp(42): note: see reference to function template instantiation 'void codex::math::matrix::rotation_y<codex::math::matrix4x4f,double>(matrix &,const Number)' being compiled
+          with
+          [
+              matrix=codex::math::matrix4x4f,
+              Number=double
+          ]
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(92): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(93): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
+d:\codes\diff\code\codex\include\codex_math_matrix_utils.h(94): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
 MSVCRT.lib(initializers.obj) : warning LNK4098: defaultlib 'msvcrtd.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  51 of 790 functions ( 6.5%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    4 functions had inline decision re-evaluated but remain unchanged
+  770 of 1405 functions (54.8%) were compiled, the rest were copied from previous compilation.
+    2 functions were new in current compilation
+    44 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
 advmath.lib(basic_mv.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(basic_mv.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info
 advmath.lib(basic_v.obj) : warning LNK4099: PDB 'AdvMath.pdb' was not found with 'advmath.lib(basic_v.obj)' or at 'D:\codes\diff\code\diff_stereo\x64\Release\AdvMath.pdb'; linking object as if no debug info

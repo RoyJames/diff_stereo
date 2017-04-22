@@ -9,7 +9,7 @@ void synthesize_images()
 
 	RTCDevice device = rtcNewDevice(NULL);
 	base_tri_mesh m;
-	m.load_obj("d:/codes/diff/data/sphere.obj");
+	m.load_obj("d:/codes/diff/data/cat.obj");
 
 	for (int i = 0; i < m.num_vertices(); i++)
 		m.position(i).z -= SHIFT_Z;// f / 2;
@@ -48,7 +48,7 @@ void synthesize_images()
 
 		for (int i = 1; i <= NUM_IMG_PAIRS; i++)
 		{
-			float	scale_rot = 0.0f;//0.03f;//3.0f,
+			float	scale_rot = 0.03f;//0.03f;//3.0f,
 			float	scale_trans = 0.5f;// 0.5f;//0.05f;
 
 			char filename[MAX_PATH];
