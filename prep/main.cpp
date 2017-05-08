@@ -359,258 +359,6 @@ public:
 };
 
 
-
-void test_view_diff3()
-{
-	random_number_generator<float> rng;
-	float scale_trans = 0.1f;// 0.5f;//0.05f;
-
-	const int dim = 256;
-	hemi_octa_frame<float> fr;
-	fr.init(dim);
-
-	pref_env env;
-	env.load("d:/codes/diff/data/uffizi.pref_env");
-
-	std::vector<std::vector<vector2f>> grad;
-	std::vector<vector3f> wo0;
-	wo0.push_back(vector3f(-0.201933f, 0.00078573f, 4.02294f));
-	wo0.push_back(vector3f(-0.201933f + 2, 0.00078573f, 4.02294f));
-	wo0.push_back(vector3f(-0.201933f - 2, 0.00078573f, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f, 0.00078573f + 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f, 0.00078573f - 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f + 2, 0.00078573f + 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f - 2, 0.00078573f - 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f - 2, 0.00078573f + 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f + 2, 0.00078573f - 2, 4.02294f));
-
-	grad.resize(wo0.size());
-
-	for (int iwo = 0; iwo < wo0.size(); iwo++)
-		for (int k = 0; k < 8; k++)
-		{
-			for (int j = 0; j < dim*dim; j++)
-			{
-				vector3f n0;
-				fr.get_n(n0, j);
-
-				float c0;
-				{
-					vector3f wo = wo0[iwo];
-					wo.normalize();
-					vector3f n = n0;
-
-					vector3f c;
-					compute_brdf(c, wo, n, (float)k, env);
-					c0 = (c.x + c.y + c.z) / 3;
-				}
-
-				std::vector<float> mA, vb;
-				for (int i = 0; i < 200; i++)
-				{
-					vector3f tau(
-						(rng.rand_real() * 2 - 1)*scale_trans,
-						(rng.rand_real() * 2 - 1)*scale_trans,
-						(rng.rand_real() * 2 - 1)*scale_trans
-					);
-
-					vector3f n = n0;
-					vector3f wo = wo0[iwo] + tau;
-					wo.normalize();
-
-					vector3f c;
-					compute_brdf(c, wo, n, (float)k, env);
-
-					mA.push_back(tau.x - wo.x / wo.z*tau.z);
-					mA.push_back(tau.y - wo.y / wo.z*tau.z);
-					vb.push_back((c.x + c.y + c.z) / 3 - c0);
-				}
-
-				la_matrix<float> A(vb.size(), 2);
-				la_vector<float> b(vb);
-				for (int i = 0; i < A.row; i++)
-				{
-					A.m[0 * A.row + i] = mA[i * 2 + 0];
-					A.m[1 * A.row + i] = mA[i * 2 + 1];
-				}
-
-				la_matrix<float> ATA;
-				la_vector<float> ATb;
-				smmmul(ATA, A.transpose(), A);
-				smvmul(ATb, A.transpose(), b);
-
-				la_vector<float> x;
-				slsq(x, ATA, ATb, 1);
-
-				vector2f xnorm(x.v[0], x.v[1]);
-				xnorm.normalize();
-				grad[iwo].push_back(xnorm);
-			}
-		}
-
-	{
-		FILE *fp;
-		FOPEN(fp, "d:/codes/diff/data/energy.bat", "wt");
-
-		vector3f n(0, 0, 1);
-		int nidx = fr.map(n);
-
-		std::vector<float> v_feature;
-		for (int i = 0; i < wo0.size(); i++)
-		{
-			v_feature.push_back(grad[i][5 * dim * dim + nidx].x);
-			v_feature.push_back(grad[i][5 * dim * dim + nidx].y);
-		}
-		la_vector<float> feature(v_feature);
-		svnormalize(feature);
-
-		std::vector<float> img;
-		for (int j = 0; j < 8; j++)
-		{
-			img.assign(dim*dim * 3, 0);
-
-			for (int i = 0; i < dim*dim; i++)
-			{
-				std::vector<float> v;
-				for (int k = 0; k < wo0.size(); k++)
-				{
-					v.push_back(grad[k][i + j*dim*dim].x);
-					v.push_back(grad[k][i + j*dim*dim].y);
-				}
-				la_vector<float> vec(v);
-				svnormalize(vec);
-
-				la_vector<float> diff;
-				svsub(diff, vec, feature);
-
-				img[i * 3 + 0] = 0;
-				img[i * 3 + 1] = sqrt(svdot(diff, diff) / 4 / wo0.size());//(-svdot(vec, feature) + 1) / 2;
-				img[i * 3 + 2] = 0;
-			}
-
-			char filename[MAX_PATH];
-			sprintf_s(filename, "d:/codes/diff/data/energy%02d.raw", j);
-			save_img_float(filename, &img[0], dim, dim);
-			fprintf_s(fp, "raw2img %s\n", filename);
-		}
-
-		fclose(fp);
-	}
-}
-
-void test_view_diff4()
-{
-	random_number_generator<float> rng;
-	float scale_trans = 0.1f;
-
-	const int dim = 256;
-	const int num_samples = 1;// 200;
-	hemi_octa_frame<float> fr;
-	fr.init(dim);
-
-	pref_env env;
-	env.load("d:/codes/diff/data/uffizi.pref_env");
-
-	std::vector<vector3f> wo0;
-	wo0.push_back(vector3f(-0.201933f, 0.00078573f, 4.02294f));
-	wo0.push_back(vector3f(-0.201933f + 2, 0.00078573f, 4.02294f));
-	wo0.push_back(vector3f(-0.201933f - 2, 0.00078573f, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f, 0.00078573f + 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f, 0.00078573f - 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f + 2, 0.00078573f + 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f - 2, 0.00078573f - 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f - 2, 0.00078573f + 2, 4.02294f));
-	//wo0.push_back(vector3f(-0.201933f + 2, 0.00078573f - 2, 4.02294f));
-
-	std::vector<std::vector<float>> grad;
-	grad.resize(wo0.size());
-
-	std::vector<vector3f> disp;
-	for (int i = 0; i < num_samples; i++)
-	{
-		vector3f tau(
-			(rng.rand_real() * 2 - 1)*scale_trans,
-			(rng.rand_real() * 2 - 1)*scale_trans,
-			(rng.rand_real() * 2 - 1)*scale_trans
-		);
-		disp.push_back(tau);
-	}
-
-	for (int iwo = 0; iwo < wo0.size(); iwo++)
-		for (int k = 0; k < 8; k++)
-		{
-			for (int j = 0; j < dim*dim; j++)
-			{
-				vector3f n0;
-				fr.get_n(n0, j);
-
-				for (int i = 0; i < num_samples; i++)
-				{
-					vector3f n = n0;
-					vector3f wo = wo0[iwo] + disp[i];
-					wo.normalize();
-
-					vector3f c;
-					compute_brdf(c, wo, n, (float)k, env);
-
-					grad[iwo].push_back((c.x + c.y + c.z) / 3);
-				}
-			}
-		}
-
-	{
-		FILE *fp;
-		FOPEN(fp, "d:/codes/diff/data/energy.bat", "wt");
-
-		vector3f n(0, 0, 1);
-		int nidx = fr.map(n);
-
-		std::vector<float> v_feature;
-		for (int i = 0; i < wo0.size(); i++)
-			for (int j = 0; j < num_samples; j++)
-				v_feature.push_back(grad[i][(5*dim*dim + nidx)*num_samples+j]);
-		la_vector<float> feature(v_feature);
-		float sum = 0;
-		for (int i = 0; i < feature.length; i++)
-			sum += feature.v[i];
-		for (int i = 0; i < feature.length; i++)
-			feature.v[i] -= sum / feature.length;
-		svnormalize(feature);
-
-		std::vector<float> img;
-		for (int j = 0; j < 8; j++)
-		{
-			img.assign(dim*dim * 3, 0);
-
-			for (int i = 0; i < dim*dim; i++)
-			{
-				std::vector<float> v;
-				for (int k = 0; k < wo0.size(); k++)
-					for (int l = 0; l < num_samples; l++)
-						v.push_back(grad[k][(i + j*dim*dim)*num_samples+l]);
-				la_vector<float> vec(v);
-				float sum = 0;
-				for (int i = 0; i < vec.length; i++)
-					sum += vec.v[i];
-				for (int i = 0; i < vec.length; i++)
-					vec.v[i] -= sum / vec.length;
-				svnormalize(vec);
-
-				img[i * 3 + 0] = 0;
-				img[i * 3 + 1] = (-svdot(vec, feature) + 1) / 2;
-				img[i * 3 + 2] = 0;
-			}
-
-			char filename[MAX_PATH];
-			sprintf_s(filename, "d:/codes/diff/data/energy%02d.raw", j);
-			save_img_float(filename, &img[0], dim, dim);
-			fprintf_s(fp, "raw2img %s\n", filename);
-		}
-
-		fclose(fp);
-	}
-}
-
 //class myfunc : public func<float>
 //{
 //public:
@@ -728,7 +476,8 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 
 			vector3f c;
 			lerp_img(c.v, scr_i, img, width, height, 3);
-			pixel0.push_back((c.x + c.y + c.z) / 3);
+			//pixel0.push_back((c.x + c.y + c.z) / 3);
+			pixel0.push_back(c.x);
 			//printf_s("pixel0: %g\n", pixel0);
 		}
 	}
@@ -820,7 +569,8 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 				// check if the point is mapped to empty space
 				if ((v - vector3f(1, 0, 1)).length() > 1e-5) {
 					A_temp.push_back(vector3f(duv.x, duv.y, 1.0f));
-					b_temp.push_back((v.x + v.y + v.z) / 3);
+					//b_temp.push_back((v.x + v.y + v.z) / 3);
+					b_temp.push_back(v.x);
 
 					// check individual point
 /*					{
@@ -843,14 +593,18 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 				A.m[2 * A.row + j] = A_temp[j].z;
 				b.v[j] = b_temp[j];
 			}
-
 			la_vector<float> x;
 			la_matrix<float> A_copy;
 			A_copy = A;
-			slsq(x, A_copy, b, 1.0f);
-			gI.x = x.v[0];
-			gI.y = x.v[1];
-			gI.z = x.v[2];
+			if (valid_samples > 0) {
+				slsq(x, A_copy, b, 1.0f);
+				gI.x = x.v[0];
+				gI.y = x.v[1];
+				gI.z = x.v[2];
+			}
+			else {
+				gI = vector3f(0,0,0);
+			}
 			coeff_img_A.push_back(-k2*gI.x - k3*gI.y);
 			coeff_img_b.push_back(gI.z - pixel0[i_point]);
 
@@ -869,11 +623,16 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 				{
 					//printf_s("gd=%g,duv=(%g, %g)\n", z, duv.x, duv.y);
 					//printf_s("img %d point %d, %d samples: %.6f\t recon: %.6f\t err: %.2f%%\n", i, i_point, valid_samples, pixel0[i_point], recon, err);
-					la_vector<float> res, diff;
-					smvmul(res, A, x);
-					svsub(diff, res, b);
-					//printf_s("Ia Ib Ic = [%g %g %g], err norm = %g\n", gI.x, gI.y, gI.z, svnorm2(diff));
-					recon_err[(i - 1)*scr.size() + i_point] = svnorm2(diff);
+					if (valid_samples > 0) {
+						la_vector<float> res, diff;
+						smvmul(res, A, x);
+						svsub(diff, res, b);
+						recon_err[(i - 1)*scr.size() + i_point] = svnorm2(diff);
+					}
+					else {
+						recon_err[(i - 1)*scr.size() + i_point] = 10000;
+					}
+
 				}
 			}					
 		}
@@ -886,7 +645,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 	prepfile = fopen(filename, "wb");
 	int nk = k1.size();
 	int nA = coeff_A.size();
-	int nsubA = coeff_A[0].size();
+	int nsubA = coeff_A[0].size();	// check possible memory access error later!
 	fwrite(&nk, sizeof(int), 1, prepfile);
 	fwrite(&nA, sizeof(int), 1, prepfile);
 	fwrite(&nsubA, sizeof(int), 1, prepfile);
@@ -954,11 +713,9 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		exit(1);
 	}
 	int n_of_point = uv.size();
-	fwrite(&width, sizeof(int), 1, file_depthmap);
-	fwrite(&height, sizeof(int), 1, file_depthmap);
-	fwrite(&n_of_point, sizeof(int), 1, file_depthmap);
+	float* z_buffer = new float[n_of_point];
 
-	for (int i_point = 0; i_point < uv.size(); i_point++)
+	for (int i_point = 0; i_point < n_of_point; i_point++)
 	{
 		diffuse_func opt_func;
 		opt_func.beta = 1.0f / FOCAL_LEN;		
@@ -1023,28 +780,88 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 				}
 				printf_s("\n");
 			}
+		}		
+		z_buffer[i_point] = z_est_lm;
+	}
+
+	// following are the output procedures for .obj and a depthmap
+	// 1st pass: building the connectivity
+	float* depth_map = new float[IMG_DIM*IMG_DIM];
+	int* hash_map = new int[IMG_DIM*IMG_DIM];
+	float* z_filtered = new float[n_of_point];
+	memset(depth_map, 0, sizeof(depth_map));
+	memset(hash_map, 0, sizeof(hash_map));
+	for (int i_point = 0; i_point < n_of_point; i_point++)
+	{
+		int index = scr[i_point].first*IMG_DIM + scr[i_point].second;
+		depth_map[index] = z_buffer[i_point];
+		hash_map[index] = i_point + 1;
+	}
+	// 2nd pass: median filtering the depth map
+	int kernel_dim = 7;
+	for (int i_point = 0; i_point < n_of_point; i_point++)
+	{
+		int x = scr[i_point].first;
+		int y = scr[i_point].second;
+		std::vector<float> filter_buffer(kernel_dim*kernel_dim);
+		int cnt = 0;
+		for (int ix = x - kernel_dim / 2; ix <= x + kernel_dim / 2; ix++)
+		{
+			for (int iy = y - kernel_dim / 2; iy <= y + kernel_dim / 2; iy++)
+			{
+				filter_buffer[cnt++] = depth_map[ix*IMG_DIM + iy];
+			}
 		}
+		std::vector<float>::iterator first = filter_buffer.begin();
+		std::vector<float>::iterator last = filter_buffer.end();
+		std::vector<float>::iterator middle = first + (last - first) / 2;
+		std::nth_element(first, middle, last);
+		z_filtered[i_point] = *middle;
+	}
+	delete[] depth_map;
 
-
+	fwrite(&width, sizeof(int), 1, file_depthmap);
+	fwrite(&height, sizeof(int), 1, file_depthmap);
+	fwrite(&n_of_point, sizeof(int), 1, file_depthmap);
+	for (int i_point = 0; i_point < n_of_point; i_point++)
+	{
 		{	// output the obj file
-			float x = uv[i_point].x * (1 - z_est_lm / FOCAL_LEN);
-			float y = uv[i_point].y * (1 - z_est_lm / FOCAL_LEN);
-			float z = z_est_lm + SHIFT_Z;
-			if (fabs(x) < 2.2f && fabs(y) < 2.2f && fabs(z) <2.2f)
-				fprintf(file_obj, "v %g %g %g\n", x, y, z); 
+			float z = z_filtered[i_point];
+			float x = uv[i_point].x * (1 - z / FOCAL_LEN);
+			float y = uv[i_point].y * (1 - z / FOCAL_LEN);
+			z += SHIFT_Z;
+			//if (fabs(x) < 2.2f && fabs(y) < 2.2f && fabs(z) <2.2f)			
+			fprintf(file_obj, "v %g %g %g\n", x, y, z);
 		}
 		{
 			// output the depth map
-			//int iw = (int)(scr[i_point].x + 0.5f);	// convert to matlab 1-start style
-			//int ih = (int)(scr[i_point].y + 0.5f);
-			//printf("%d:%d %d\n", i_point, iw, ih);
-			float z = z_est_lm + SHIFT_Z;
+			float z = z_filtered[i_point] + SHIFT_Z;
 			fwrite(&scr[i_point].first, sizeof(int), 1, file_depthmap);
 			fwrite(&scr[i_point].second, sizeof(int), 1, file_depthmap);
 			fwrite(&z, sizeof(float), 1, file_depthmap);
 		}
 	}
+	for (int i_point = 0; i_point < n_of_point; i_point++)
+	{
+		int x = scr[i_point].first;
+		int y = scr[i_point].second;
+		if (hash_map[x*IMG_DIM + y] && hash_map[(x + 1)*IMG_DIM + y] && 
+			hash_map[x*IMG_DIM + y + 1]) 
+		{
+			fprintf(file_obj, "f %d %d %d\n", hash_map[x*IMG_DIM + y], 
+				hash_map[x*IMG_DIM + y + 1], hash_map[(x + 1)*IMG_DIM + y]);
+		}
+		if (hash_map[x*IMG_DIM + y] && hash_map[(x - 1)*IMG_DIM + y] &&
+			hash_map[x*IMG_DIM + y - 1])
+		{
+			fprintf(file_obj, "f %d %d %d\n", hash_map[x*IMG_DIM + y],
+				hash_map[x*IMG_DIM + y - 1], hash_map[(x - 1)*IMG_DIM + y]);
+		}
+	}
 
+	delete[] hash_map;
+	delete[] z_buffer;
+	delete[] z_filtered;
 	fclose(file_obj);
 	fclose(file_depthmap);
 	//la_vector<float> comp1, comp2;
@@ -1343,8 +1160,8 @@ void main()
 
 	//test_view_diff3();
 	//test_filtered_1st_order();
-	synthesize_images();
-	return;
+	//synthesize_images();
+	//return;
 
 
 	std::vector<std::pair<int,int> > points_under_test;

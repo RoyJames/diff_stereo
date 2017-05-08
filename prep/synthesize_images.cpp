@@ -9,7 +9,7 @@ void synthesize_images()
 
 	RTCDevice device = rtcNewDevice(NULL);
 	base_tri_mesh m;
-	m.load_obj("d:/codes/diff/data/cat.obj");
+	m.load_obj("d:/codes/diff/data/sphere_sub.obj");
 
 	for (int i = 0; i < m.num_vertices(); i++)
 		m.position(i).z -= SHIFT_Z;// f / 2;
