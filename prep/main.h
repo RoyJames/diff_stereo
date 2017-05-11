@@ -6,7 +6,7 @@
 
 #define PATH			"D:/codes/diff/data/"
 #define NUM_IMG_PAIRS	32
-#define NUM_IMG_VIEW	1
+#define NUM_IMG_VIEW	2
 #define IMG_DIM			2048//512///4096//2048
 #define FOCAL_LEN		5.0f
 #define SHIFT_Z			20.0f
