@@ -183,9 +183,10 @@ void render(
 	const vector3f &dx,
 	const vector3f &dy,
 	const float f,
-	
+
 	const base_tri_mesh &m,
-	RTCDevice device)
+	RTCDevice device,
+	int gd_idx)
 {
 	std::vector<int> face;
 	for (int i = 0; i < m.num_faces(); i++)
@@ -224,95 +225,96 @@ void render(
 
 	// compute groundtruth depth and kappa_log
 	// you MUST comment this segment out when not used!
-	//{
-	//	//printf("%g %g %g\n", center.x, center.y, center.z);
-	//	RTCRay ray;
-	//	char filename[MAX_PATH];
-	//	//sprintf_s(filename, "d:/codes/diff/data/groundtruth_depth.dat");
-	//	//FILE *file;
-	//	//if ((file = fopen(filename, "wb")) == NULL)
-	//	//{
-	//	//	printf("open file failed!\n");
-	//	//	exit(1);
-	//	//}
-	//	//sprintf_s(filename, "d:/codes/diff/data/groundtruth_normal.dat");
-	//	//FILE *file_normal;
-	//	//if ((file_normal = fopen(filename, "wb")) == NULL)
-	//	//{
-	//	//	printf("open file failed!\n");
-	//	//	exit(1);
-	//	//}
-	//	sprintf_s(filename, "d:/codes/diff/data/groundtruth_lambertian.dat");
-	//	FILE *file_lambertian;
-	//	if ((file_lambertian = fopen(filename, "wb")) == NULL)
-	//	{
-	//		printf("open file failed!\n");
-	//		exit(1);
-	//	}
-	//	//int scan_begin = 1000, scan_end = 1048;
-	//	//fwrite(&scan_begin, sizeof(int), 1, file);
-	//	//fwrite(&scan_end, sizeof(int), 1, file);
-	//	//remove("d:/codes/diff/data/groundtruth_kappa_log.dat");
-	//	//for (int i = scan_begin; i <= scan_end; i++)
-	//	std::vector<float> gd_lambertian;
-	//	std::vector<std::pair<int, int> > coord_lambertian;
-	//	int cnt = 0;
-	//	//int sample_dist = 10;
-	//	for (int i = 0; i < height; i++)
-	//	{
-	//		//for (int j = scan_begin; j <= scan_end; j++)
-	//		for (int j = 0; j < width; j++)
-	//		{
-	//			camera.gen_ray(ray, i, j);
-	//			vector2f src(i, j);
-	//			vector2f uv;
-	//			screen2uv(uv, src, IMG_DIM, IMG_DIM);
-	//			rt_result result;
-	//			intersect(result, scene, ray);
-	//			if (result.tri_idx != -1)
-	//			{
-	//				cnt++;
-	//				const triangle_index t = m.face(result.tri_idx);
-	//				vector3d inter_pos = m.position(t.i1)*result.bary.x +
-	//					m.position(t.i2)*result.bary.y +
-	//					m.position(t.i0)*(1 - result.bary.x - result.bary.y);
-	//				//printf("scan=%.6f\tz=%g\n", uv.x, inter_pos.z);
-	//				vector3d nd = m.normal(t.i1)*result.bary.x +
-	//					m.normal(t.i2)*result.bary.y +
-	//					m.normal(t.i0)*(1 - result.bary.x - result.bary.y);
-	//				nd.normalize();
+	if(gd_idx >=0)
+	{
+		//printf("%g %g %g\n", center.x, center.y, center.z);
+		RTCRay ray;
+		char filename[MAX_PATH];
+		//sprintf_s(filename, "d:/codes/diff/data/groundtruth_depth.dat");
+		//FILE *file;
+		//if ((file = fopen(filename, "wb")) == NULL)
+		//{
+		//	printf("open file failed!\n");
+		//	exit(1);
+		//}
+		//sprintf_s(filename, "d:/codes/diff/data/groundtruth_normal.dat");
+		//FILE *file_normal;
+		//if ((file_normal = fopen(filename, "wb")) == NULL)
+		//{
+		//	printf("open file failed!\n");
+		//	exit(1);
+		//}
+		sprintf_s(filename, "d:/codes/diff/data/groundtruth_lambertian_view%02d.dat", gd_idx);
+		FILE *file_lambertian;
+		if ((file_lambertian = fopen(filename, "wb")) == NULL)
+		{
+			printf("open file failed!\n");
+			exit(1);
+		}
+		//int scan_begin = 1000, scan_end = 1048;
+		//fwrite(&scan_begin, sizeof(int), 1, file);
+		//fwrite(&scan_end, sizeof(int), 1, file);
+		//remove("d:/codes/diff/data/groundtruth_kappa_log.dat");
+		//for (int i = scan_begin; i <= scan_end; i++)
+		std::vector<float> gd_lambertian;
+		std::vector<std::pair<int, int> > coord_lambertian;
+		int cnt = 0;
+		//int sample_dist = 10;
+		for (int i = 0; i < height; i++)
+		{
+			//for (int j = scan_begin; j <= scan_end; j++)
+			for (int j = 0; j < width; j++)
+			{
+				camera.gen_ray(ray, i, j);
+				vector2f src(i, j);
+				vector2f uv;
+				screen2uv(uv, src, IMG_DIM, IMG_DIM);
+				rt_result result;
+				intersect(result, scene, ray);
+				if (result.tri_idx != -1)
+				{
+					cnt++;
+					const triangle_index t = m.face(result.tri_idx);
+					vector3d inter_pos = m.position(t.i1)*result.bary.x +
+						m.position(t.i2)*result.bary.y +
+						m.position(t.i0)*(1 - result.bary.x - result.bary.y);
+					//printf("scan=%.6f\tz=%g\n", uv.x, inter_pos.z);
+					vector3d nd = m.normal(t.i1)*result.bary.x +
+						m.normal(t.i2)*result.bary.y +
+						m.normal(t.i0)*(1 - result.bary.x - result.bary.y);
+					nd.normalize();
 
-	//				vector3f n(nd.x, nd.y, nd.z);
-	//				vector3f wo(-ray.dir[0], -ray.dir[1], -ray.dir[2]);
+					vector3f n(nd.x, nd.y, nd.z);
+					vector3f wo(-ray.dir[0], -ray.dir[1], -ray.dir[2]);
 
-	//				//vector3f c;
-	//				//compute_rho(c, wo, n, env);
-	//				//fwrite(&inter_pos.z, sizeof(double), 1, file);
-	//				//fwrite(n.v, sizeof(float), 3, file_normal);
-	//				//printf_s("%g\n", inter_pos.z);
-	//				//if(cnt % sample_dist == 0)
-	//				gd_lambertian.push_back(inter_pos.z);
-	//				coord_lambertian.push_back(std::pair<int, int>(i, j));
-	//			}
-	//			else {
-	//				//printf("No intersection.\n");
-	//			}
-	//		}
-	//	}
-	//	//fclose(file);
-	//	//fclose(file_normal);
-	//	int n_valid = gd_lambertian.size();
-	//	printf("%d points are valid\n", n_valid);
-	//	fwrite(&n_valid, sizeof(int), 1, file_lambertian);
-	//	for (int i = 0; i < gd_lambertian.size(); i++) {
-	//		fwrite(&coord_lambertian[i].first, sizeof(int), 1, file_lambertian);
-	//		fwrite(&coord_lambertian[i].second, sizeof(int), 1, file_lambertian);
-	//		fwrite(&gd_lambertian[i], sizeof(float), 1, file_lambertian);
-	//	}
-	//	fclose(file_lambertian);
-	//	printf("writing file done\n");
-	//	exit(1);
-	//}
+					//vector3f c;
+					//compute_rho(c, wo, n, env);
+					//fwrite(&inter_pos.z, sizeof(double), 1, file);
+					//fwrite(n.v, sizeof(float), 3, file_normal);
+					//printf_s("%g\n", inter_pos.z);
+					//if(cnt % sample_dist == 0)
+					gd_lambertian.push_back(inter_pos.z);
+					coord_lambertian.push_back(std::pair<int, int>(i, j));
+				}
+				else {
+					//printf("No intersection.\n");
+				}
+			}
+		}
+		//fclose(file);
+		//fclose(file_normal);
+		int n_valid = gd_lambertian.size();
+		printf("%d points are valid\n", n_valid);
+		fwrite(&n_valid, sizeof(int), 1, file_lambertian);
+		for (int i = 0; i < gd_lambertian.size(); i++) {
+			fwrite(&coord_lambertian[i].first, sizeof(int), 1, file_lambertian);
+			fwrite(&coord_lambertian[i].second, sizeof(int), 1, file_lambertian);
+			fwrite(&gd_lambertian[i], sizeof(float), 1, file_lambertian);
+		}
+		fclose(file_lambertian);
+		printf("writing groundtruth file for view %d done\n", gd_idx);
+		//exit(1);
+	}
 
 #pragma omp parallel for
 	for (int y = 0; y < height; y++)

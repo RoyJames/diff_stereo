@@ -6,7 +6,7 @@
 
 #define PATH			"D:/codes/diff/data/"
 #define NUM_IMG_PAIRS	32
-#define NUM_IMG_VIEW	2
+#define NUM_IMG_VIEW	5
 #define IMG_DIM			2048//512///4096//2048
 #define FOCAL_LEN		5.0f
 #define SHIFT_Z			20.0f
@@ -54,7 +54,8 @@ extern void render(
 	const float f,
 
 	const base_tri_mesh &m,
-	RTCDevice device);
+	RTCDevice device,
+	int gd_idx = -1);
 
 extern void save_img_float(const char *outputname, const float *img, const int new_width, const int new_height);
 extern void load_img_float(const char *inputname, std::vector<float> &img_input, int &width, int &height);

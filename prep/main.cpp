@@ -436,7 +436,7 @@ void initialize_samples(object_points &my_points, int x_begin, int y_begin, int 
 	my_points.match_neighbors();
 }
 
-void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector<float> groundtruth)
+void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector<float> groundtruth, int view_idx)
 {
 	const int nsamples = 1000;
 //	const float z0 = 0.1f, z1 = 1.1f;
@@ -458,7 +458,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 	//std::vector<vector2f> scr;
 	{
 		char filename[MAX_PATH];
-		sprintf_s(filename, PATH "img00-%02d.raw", 0);
+		sprintf_s(filename, PATH "img%02d-%02d.raw", view_idx, 0);
 
 		std::vector<float> img;
 		load_img_float(filename, img, width, height);
@@ -484,13 +484,13 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 
 	FILE *prepfile;
 	char filename[MAX_PATH];
-	sprintf_s(filename, "d:/codes/diff/data/data_lambertian_prep.dat");
+	sprintf_s(filename, "d:/codes/diff/data/data_lambertian_prep_view%02d.dat", view_idx);
 
 #if COMPUTE_PREP == 1
 	for (int i = 1; i <= NUM_IMG_PAIRS; i++)
 	{
 		char filename[MAX_PATH];
-		sprintf_s(filename, PATH "img00-%02d-raw.raw", i);
+		sprintf_s(filename, PATH "img%02d-%02d-raw.raw", view_idx, i);
 
 		int width, height;
 		std::vector<float> img;
@@ -501,7 +501,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		vector3f tau_tilde;
 
 		FILE *fp;
-		sprintf_s(filename, PATH "img00-%02d-raw.param", i);
+		sprintf_s(filename, PATH "img%02d-%02d-raw.param", view_idx, i);
 		FOPEN(fp, filename, "rb");
 		fread(&f, sizeof(float), 1, fp);
 		fread(R_tilde.m, sizeof(float) * 16, 1, fp);
@@ -638,7 +638,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		}
 		coeff_A.push_back(coeff_img_A);
 		coeff_b.push_back(coeff_img_b);
-		printf("preprocessing done for image pair %d of %d\n", i, NUM_IMG_PAIRS);
+		printf("preprocessing done for image pair %d of %d under view %d\n", i, NUM_IMG_PAIRS, view_idx);
 	}
 
 
@@ -666,7 +666,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 	delete[] recon_err;
 	fclose(prepfile);
 	printf_s("preprocessing complete, written to file\n");
-	exit(1);
+	return;
 #else
 	prepfile = fopen(filename, "rb");
 	int ns[3];
@@ -699,14 +699,14 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 #endif
 
 	FILE *file_obj;
-	sprintf_s(filename, "d:/codes/diff/data/lambertian_out.obj");
+	sprintf_s(filename, "d:/codes/diff/data/lambertian_out_view%02d.obj", view_idx);
 	if ((file_obj = fopen(filename, "w")) == NULL)
 	{
 		printf("open file failed!\n");
 		exit(1);
 	}
 	FILE *file_depthmap;
-	sprintf_s(filename, "d:/codes/diff/data/lambertian_depthmap.raw");
+	sprintf_s(filename, "d:/codes/diff/data/lambertian_depthmap_view%02d.raw", view_idx);
 	if ((file_depthmap = fopen(filename, "wb")) == NULL)
 	{
 		printf("open file failed!\n");
@@ -809,7 +809,9 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		{
 			for (int iy = y - kernel_dim / 2; iy <= y + kernel_dim / 2; iy++)
 			{
-				filter_buffer[cnt++] = depth_map[ix*IMG_DIM + iy];
+				//filter_buffer[cnt++] = depth_map[ix*IMG_DIM + iy];
+				filter_buffer[cnt++] = fabs(depth_map[ix*IMG_DIM + iy])<1e-1 ? 
+					(-SHIFT_Z):depth_map[ix*IMG_DIM + iy];
 			}
 		}
 		std::vector<float>::iterator first = filter_buffer.begin();
@@ -817,12 +819,23 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 		std::vector<float>::iterator middle = first + (last - first) / 2;
 		std::nth_element(first, middle, last);
 		z_filtered[i_point] = *middle;
+		//if (fabs(z_filtered[i_point]) < 1e-1)
+		//	z_filtered[i_point] = -SHIFT_Z;
 	}
 	delete[] depth_map;
 
 	fwrite(&width, sizeof(int), 1, file_depthmap);
 	fwrite(&height, sizeof(int), 1, file_depthmap);
 	fwrite(&n_of_point, sizeof(int), 1, file_depthmap);
+
+	matrix4x4f R_abs;
+	FILE *fp;
+	float f;
+	sprintf_s(filename, PATH "img%02d-00.param", view_idx);
+	FOPEN(fp, filename, "rb");
+	fread(&f, sizeof(float), 1, fp);
+	fread(R_abs.m, sizeof(float) * 16, 1, fp);
+	fclose(fp);
 	for (int i_point = 0; i_point < n_of_point; i_point++)
 	{
 		{	// output the obj file
@@ -830,8 +843,9 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 			float x = uv[i_point].x * (1 - z / FOCAL_LEN);
 			float y = uv[i_point].y * (1 - z / FOCAL_LEN);
 			z += SHIFT_Z;
+			vector3f transformed_xyz = R_abs * vector3f(x, y, z);
 			//if (fabs(x) < 2.2f && fabs(y) < 2.2f && fabs(z) <2.2f)			
-			fprintf(file_obj, "v %g %g %g\n", x, y, z);
+			fprintf(file_obj, "v %g %g %g\n", transformed_xyz.x, transformed_xyz.y, transformed_xyz.z);
 		}
 		{
 			// output the depth map
@@ -862,6 +876,7 @@ void test_Lambertian_v1(std::vector<std::pair<int, int> > scr, const std::vector
 	delete[] hash_map;
 	delete[] z_buffer;
 	delete[] z_filtered;
+	delete[] recon_err;
 	fclose(file_obj);
 	fclose(file_depthmap);
 	//la_vector<float> comp1, comp2;
@@ -1163,30 +1178,34 @@ void main()
 	//synthesize_images();
 	//return;
 
-
-	std::vector<std::pair<int,int> > points_under_test;
-
-	char filename[MAX_PATH];
-	sprintf_s(filename, "d:/codes/diff/data/groundtruth_lambertian.dat");
-	FILE *file_lambertian;
-	if ((file_lambertian = fopen(filename, "rb")) == NULL)
+	for (int view_idx = 0; view_idx < NUM_IMG_VIEW; view_idx++)
 	{
-		printf("open file failed!\n");
-		exit(1);
-	}
-	std::vector<float> groundtruth;
-	int n_valid;
-	fread(&n_valid, sizeof(int), 1, file_lambertian);
-	for (int i = 0; i < n_valid; i++) {
-		float gd_z;
-		int xy[2];
-		fread(xy, sizeof(int), 2, file_lambertian);
-		fread(&gd_z, sizeof(float), 1, file_lambertian);
-		points_under_test.push_back(std::pair<int, int>(xy[0], xy[1]));
-		groundtruth.push_back(gd_z);
+		std::vector<std::pair<int, int> > points_under_test;
+
+		char filename[MAX_PATH];
+		sprintf_s(filename, "d:/codes/diff/data/groundtruth_lambertian_view%02d.dat", view_idx);
+		FILE *file_lambertian;
+		if ((file_lambertian = fopen(filename, "rb")) == NULL)
+		{
+			printf("open file failed!\n");
+			exit(1);
+		}
+		std::vector<float> groundtruth;
+		int n_valid;
+		fread(&n_valid, sizeof(int), 1, file_lambertian);
+		for (int i = 0; i < n_valid; i++) {
+			float gd_z;
+			int xy[2];
+			fread(xy, sizeof(int), 2, file_lambertian);
+			fread(&gd_z, sizeof(float), 1, file_lambertian);
+			points_under_test.push_back(std::pair<int, int>(xy[0], xy[1]));
+			groundtruth.push_back(gd_z);
+		}
+		fclose(file_lambertian);
+
+		test_Lambertian_v1(points_under_test, groundtruth, view_idx);
 	}
 
-	test_Lambertian_v1(points_under_test, groundtruth);
 	//test_Specular();
 
 	return;

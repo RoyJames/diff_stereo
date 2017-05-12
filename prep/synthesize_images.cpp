@@ -24,8 +24,6 @@ void synthesize_images()
 		vector3f T_abs;
 		char filename[MAX_PATH];
 
-		//rotation_x(R_abs, PI / 6);
-		//identity(R_abs);
 		if (j == 0)
 		{
 			identity(R_abs);
@@ -35,9 +33,9 @@ void synthesize_images()
 			else if (j == 2)
 				rotation_y(R_abs, PI / 6);
 			else if (j == 3)
-				rotation_x(R_abs, -PI / 6);
+				rotation_x(R_abs, -PI / 3);
 			else if (j == 4)
-				rotation_y(R_abs, -PI / 6);
+				rotation_y(R_abs, -PI / 3);
 		}
 
 		std::vector<float> img;
@@ -46,7 +44,7 @@ void synthesize_images()
 		
 		render(img, width, height,
 			new_center, R_abs*vector3f(1, 0, 0), R_abs*vector3f(0, 1, 0),
-			f, m, device);
+			f, m, device, j);
 		sprintf_s(filename, PATH "img%02d-00.raw", j);
 		save_img_float(filename, &img[0], width, height);
 
